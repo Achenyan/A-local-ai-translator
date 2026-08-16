@@ -7,7 +7,6 @@
 ![Python](https://img.shields.io/badge/Python-3.10%2B-blue) ![License](https://img.shields.io/badge/License-MIT-green) ![Platform](https://img.shields.io/badge/Platform-Windows-0078d4)
 
 ## ✨ 功能特性
-
 - 📥 **拖拽翻译**：把 `.json / .txt / .md / .srt` 文件拖进窗口，自动开始翻译，完成后自动归档到「已翻译」目录
 - 🤖 **本地模型**：支持 Ollama 全系模型（qwen3、llama 等），一键下载/切换，模型常驻显存策略可选
 - 🔀 **翻译模式**：短线（用完即卸，省显存） / 长线（常驻显存，翻译更快）
@@ -15,9 +14,7 @@
 - 🌐 **第三方 API**：OpenAI 兼容接口（DeepSeek / 通义 / Kimi / OpenAI 等），地址/Key/模型名一键配置
 - 🌓 **跟随系统主题**：深/浅色 + Windows 强调色自适应
 - 🧩 **双语言界面**：中文 / English 一键切换
-- 🪟 **16:9 等比窗口**：任意方向缩放自动补齐比例，布局不鬼畜
 - 📋 **日志系统**：`app.log` 记录全过程（启动/翻译/错误），出问题发这个文件即可
-- 🛡️ **单实例**：重复打开只激活已有窗口
 
 ## 🚀 快速开始
 
@@ -49,7 +46,9 @@ pyinstaller --noconsole --onefile --collect-all tkinterdnd2 gui_translate.py
 
 ## 🖼️ 界面预览
 
-（可在此放置截图）
+<img width="1026" height="608" alt="image" src="https://github.com/user-attachments/assets/ae567acb-d0e1-4bbc-b04d-3bd85e9d86e2" />
+<img width="1026" height="608" alt="image" src="https://github.com/user-attachments/assets/a0560e5d-424e-48fd-8055-4aae897e015a" />
+
 
 | EZ 模式 | 高级模式 |
 |---|---|
@@ -79,16 +78,23 @@ A: 未安装 Ollama 或未启动。安装后重新打开软件即可自动拉起
 A: 首次使用某模型需要加载进显存（10~60 秒），之后秒回；或切换「长线翻译」模式常驻显存。
 
 **Q: 支持哪些文件格式？**
-A: `.json`（游戏本地化/字幕常用）、`.txt`、`.md`、`.srt` 字幕。
+A: `.json`（mtool导出）、`.txt`、`.md`、`.srt` 字幕。
+下图为mtool导出待翻译文件教程
+<img width="782" height="423" alt="image" src="https://github.com/user-attachments/assets/0c26baec-16b0-4a9c-967a-de369ec15902" />
 
 **Q: 会不会上传我的文件？**
 A: 不会。本地翻译全程离线；只有配置了第三方 API 时，内容才会发给你自己配置的接口。
 
-## 🤝 贡献
+## 🤝 贡献者
+-开发者：Achenyan987
 
-欢迎 PR / Issue：
-- 新增模型预设：改 `gui_translate.py` 里的 `MODELS_INFO` / `MODELS_GPU` 即可
-- 翻译质量：调整 `translate.py` 的 Prompt 与参数
+-代码（不分先后）：Achenyan987；deepseek
+
+-灵感来源：https://mtool.app/
+（为了省那点订阅费开发了这个软件）
+
+-底层支持：https://github.com/ollama/ollama
+https://github.com/QwenLM/Qwen3
 
 ## 📜 License
 
