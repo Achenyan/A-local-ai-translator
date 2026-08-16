@@ -87,9 +87,9 @@ A: `.json`（mtool导出）、`.txt`、`.md`、`.srt` 字幕。
 A: 不会。本地翻译全程离线；只有配置了第三方 API 时，内容才会发给你自己配置的接口。
 
 ## 🤝 贡献者
--开发者：Achenyan987
+-开发者：Achenyan
 
--代码（不分先后）：Achenyan987；deepseek
+-代码（不分先后）：Achenyan； deepseek
 
 -灵感来源：https://mtool.app/
 （为了省那点订阅费开发了这个软件）
