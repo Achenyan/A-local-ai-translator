@@ -1,0 +1,23 @@
+# Python
+__pycache__/
+*.pyc
+*.pyo
+
+# 打包产物
+build/
+dist/
+*.spec
+
+# 运行时数据
+settings.json
+app.log
+待翻译/
+已翻译/
+
+# 模型库（体积巨大，勿提交）
+models/
+*.gguf
+
+# 系统
+Thumbs.db
+.DS_Store
