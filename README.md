@@ -47,7 +47,8 @@ pyinstaller --noconsole --onefile --collect-all tkinterdnd2 gui_translate.py
 ## 🖼️ 界面预览
 
 <img width="1026" height="608" alt="image" src="https://github.com/user-attachments/assets/ae567acb-d0e1-4bbc-b04d-3bd85e9d86e2" />
-<img width="1026" height="608" alt="image" src="https://github.com/user-attachments/assets/a0560e5d-424e-48fd-8055-4aae897e015a" />
+<img width="1026" height="608" alt="image" src="https://github.com/user-attachments/assets/7cfb249a-aea3-4816-a224-7fbbfb484d4d" />
+
 
 
 | EZ 模式 | 高级模式 |
