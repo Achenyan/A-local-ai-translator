@@ -305,7 +305,8 @@ def parse_glossary(out):
 
 
 def translate_text(model, text):
-    """普通文本（txt/md）：按段落分块，逐块翻译后拼接"""
+    """普通文本（txt/md）：按段落分块，逐块翻译后拼接
+    （单换行的大文件也会按行二次拆分，避免超长单块被截断）"""
     lang = detect_lang(text)
     paras = text.split("\n\n")  # 以空行分段
 
@@ -319,6 +320,24 @@ def translate_text(model, text):
         cur_len += n + 1
     if cur:
         blocks.append("\n\n".join(cur))
+
+    # 超长块（如整个文件都是单换行）按行二次拆分，防止单块超上下文被截断
+    final = []
+    for b in blocks:
+        if len(b) <= BLOCK_CHARS:
+            final.append(b)
+            continue
+        lines = b.split("\n")
+        sub, sub_len = [], 0
+        for ln in lines:
+            if sub_len + len(ln) + 1 > BLOCK_CHARS and sub:
+                final.append("\n".join(sub))
+                sub, sub_len = [], 0
+            sub.append(ln)
+            sub_len += len(ln) + 1
+        if sub:
+            final.append("\n".join(sub))
+    blocks = final
 
     parts = []
     total = len(blocks)
