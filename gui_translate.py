@@ -510,8 +510,8 @@ class TranslateApp:
                   "安装包已随软件附带（OllamaSetup.exe），安装后重新打开本软件即可。\n"
                   "现在开始安装？",
                   "Ollama not detected.\n\n"
-                  "• Local translation requires the Ollama engine "
-                  "(or configure a 3rd-party API in Model Manager)\n\n"
+                  "• Remote translation (A-Chen pays) works without it\n"
+                  "• Local translation requires the Ollama engine\n\n"
                   "The installer is bundled (OllamaSetup.exe). Install it, "
                   "then reopen this app.\nInstall now?"))
         if os.path.exists(installer):
@@ -636,18 +636,30 @@ class TranslateApp:
         Tooltip(self.mode_combo, tr("\n".join(
             f"{k}：{v}" for k, v in TRANSLATE_MODES.items()),
             "\n".join(f"{k}: {v}" for k, v in TRANSLATE_MODES.items())))
-        # 并行翻译数量（同时翻译几个文件；本地多开占显存，默认 1）
+        # 并行翻译数量（自定义输入；"!" 悬停查看用途与注意事项）
         tk.Label(ctrl, text=tr("并行:", "Parallel:"), bg=COL_BG, fg=COL_SUB,
                  font=("Microsoft YaHei UI", 9)).pack(side=tk.LEFT, padx=(14, 4), pady=(36, 36))
         pval = str(self.load_settings().get("parallel_count", 1))
-        self.parallel_combo = ttk.Combobox(ctrl, values=["1", "2", "3", "4"],
-                                           state="readonly", width=3)
-        self.parallel_combo.set(pval if pval in ("1", "2", "3", "4") else "1")
-        self.parallel_combo.pack(side=tk.LEFT, pady=(36, 36))
-        self.parallel_combo.bind("<<ComboboxSelected>>", self.on_parallel_change)
-        Tooltip(self.parallel_combo, tr(
-            "同时翻译的文件数量：\n· 1 = 逐个翻译（默认，省显存）\n· 2~4 = 并行翻译（更快，但多份内容同时占显存）",
-            "Files translated at once:\n· 1 = one by one (default, low VRAM)\n· 2~4 = parallel (faster, more VRAM)"))
+        self.parallel_entry = ttk.Entry(ctrl, width=4, justify=tk.CENTER)
+        self.parallel_entry.insert(0, pval)
+        self.parallel_entry.pack(side=tk.LEFT, pady=(36, 36))
+        self.parallel_entry.bind("<Return>", self.on_parallel_change)
+        self.parallel_entry.bind("<FocusOut>", self.on_parallel_change)
+        tk.Label(ctrl, text="!", bg=COL_BG, fg=COL_GOLD, cursor="hand2",
+                 font=("Microsoft YaHei UI", 11, "bold")).pack(side=tk.LEFT, padx=(3, 0), pady=(36, 36))
+        Tooltip(self.parallel_entry, tr(
+            "同时翻译的文件数量（1~16）。\n\n"
+            "用途：\n· 1 = 逐个翻译（默认，最稳）\n· 2+ = 并行翻译，更快\n\n"
+            "注意事项：\n"
+            "· 本地翻译：每份内容同时占显存，\n  大模型（8b/30b）请保持 1~2\n"
+            "· 第三方 API：受服务商限流（429），\n  过高会报错，建议 2~4\n"
+            "· 输入数字后按回车或点击别处生效",
+            "Files translated at once (1~16).\n\n"
+            "Usage:\n· 1 = one by one (default)\n· 2+ = parallel, faster\n\n"
+            "Notes:\n"
+            "· Local: each file uses VRAM, keep 1~2 for big models\n"
+            "· 3rd-party API: rate-limited (429), try 2~4\n"
+            "· Press Enter or click away to apply"))
         self.task_count_label = tk.Label(ctrl, text="任务数: 0", bg=COL_BG,
                                          fg=COL_SUB, font=("Microsoft YaHei UI", 9))
         self.task_count_label.pack(side=tk.RIGHT, pady=(36, 36))
@@ -839,18 +851,30 @@ class TranslateApp:
         Tooltip(self.mode_combo, tr("\n".join(
             f"{k}：{v}" for k, v in TRANSLATE_MODES.items()),
             "\n".join(f"{k}: {v}" for k, v in TRANSLATE_MODES.items())))
-        # 并行翻译数量（同时翻译几个文件；本地多开占显存，默认 1）
+        # 并行翻译数量（自定义输入；"!" 悬停查看用途与注意事项）
         tk.Label(tend_row, text=tr("并行:", "Parallel:"), bg=COL_BG, fg=COL_SUB,
                  font=("Microsoft YaHei UI", 10)).pack(side=tk.LEFT, padx=(16, 0))
         pval = str(self.load_settings().get("parallel_count", 1))
-        self.parallel_combo = ttk.Combobox(tend_row, values=["1", "2", "3", "4"],
-                                           state="readonly", width=3)
-        self.parallel_combo.set(pval if pval in ("1", "2", "3", "4") else "1")
-        self.parallel_combo.pack(side=tk.LEFT, padx=6)
-        self.parallel_combo.bind("<<ComboboxSelected>>", self.on_parallel_change)
-        Tooltip(self.parallel_combo, tr(
-            "同时翻译的文件数量：\n· 1 = 逐个翻译（默认，省显存）\n· 2~4 = 并行翻译（更快，但多份内容同时占显存）",
-            "Files translated at once:\n· 1 = one by one (default, low VRAM)\n· 2~4 = parallel (faster, more VRAM)"))
+        self.parallel_entry = ttk.Entry(tend_row, width=4, justify=tk.CENTER)
+        self.parallel_entry.insert(0, pval)
+        self.parallel_entry.pack(side=tk.LEFT, padx=6)
+        self.parallel_entry.bind("<Return>", self.on_parallel_change)
+        self.parallel_entry.bind("<FocusOut>", self.on_parallel_change)
+        tk.Label(tend_row, text="!", bg=COL_BG, fg=COL_GOLD, cursor="hand2",
+                 font=("Microsoft YaHei UI", 11, "bold")).pack(side=tk.LEFT)
+        Tooltip(self.parallel_entry, tr(
+            "同时翻译的文件数量（1~16）。\n\n"
+            "用途：\n· 1 = 逐个翻译（默认，最稳）\n· 2+ = 并行翻译，更快\n\n"
+            "注意事项：\n"
+            "· 本地翻译：每份内容同时占显存，\n  大模型（8b/30b）请保持 1~2\n"
+            "· 第三方 API：受服务商限流（429），\n  过高会报错，建议 2~4\n"
+            "· 输入数字后按回车或点击别处生效",
+            "Files translated at once (1~16).\n\n"
+            "Usage:\n· 1 = one by one (default)\n· 2+ = parallel, faster\n\n"
+            "Notes:\n"
+            "· Local: each file uses VRAM, keep 1~2 for big models\n"
+            "· 3rd-party API: rate-limited (429), try 2~4\n"
+            "· Press Enter or click away to apply"))
 
         # 模型磁贴（固定正方形，Windows 磁贴风格：尺寸恒定、随窗口自动换行居中，
         # 后续新增模型只需加进 MODELS_INFO 即可自动排列）
@@ -2035,11 +2059,18 @@ class TranslateApp:
         self.log("▶ 开始翻译")
 
     def on_parallel_change(self, event=None):
-        """并行翻译数量切换：保存设置（下次开始翻译生效）"""
-        val = self.parallel_combo.get()
+        """并行翻译数量：读取输入（数字校验，1~16，非法回退 1）并保存"""
+        try:
+            val = int(self.parallel_entry.get().strip())
+        except Exception:
+            val = 1
+        val = max(1, min(val, 16))
         s = self.load_settings()
-        s["parallel_count"] = int(val)
+        s["parallel_count"] = val
         self.save_settings(s)
+        # 回写规范化值
+        self.parallel_entry.delete(0, "end")
+        self.parallel_entry.insert(0, str(val))
         self.log(f"并行翻译数量: {val}")
 
     def translate_mode_var(self):
@@ -2061,13 +2092,15 @@ class TranslateApp:
     def _worker(self):
         pending = [t for t in self.tasks if t["status"] == "排队中"]
         parallel = int(self.load_settings().get("parallel_count", 1) or 1)
-        parallel = max(1, min(parallel, 4))
+        parallel = max(1, min(parallel, 16))
         if parallel <= 1:
+            # 串行：逐个翻译（默认）
             for task in pending:
                 if self.stop_flag.is_set():
                     break
                 self._run_task(task)
         else:
+            # 并行：最多 N 个任务同时翻译；停止后未开始的任务跳过
             from concurrent.futures import ThreadPoolExecutor
 
             def run_one(task):
