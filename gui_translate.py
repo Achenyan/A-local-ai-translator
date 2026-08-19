@@ -1443,7 +1443,12 @@ class TranslateApp:
         win.resizable(False, False)
         win.transient(self.root)
         if self.mm and self.mm.get("win"):
-            win.transient(self.mm["win"])
+            try:
+                # 模型管理窗口可能已关闭（引用失效），失效则退回主窗口
+                if self.mm["win"].winfo_exists():
+                    win.transient(self.mm["win"])
+            except Exception:
+                pass
 
         tk.Label(win, text="第三方 API 配置", bg=COL_BG, fg=COL_TEXT,
                  font=("Microsoft YaHei UI", 14, "bold")).pack(pady=(14, 8))
