@@ -267,6 +267,7 @@ class TranslateApp:
         self.task_id_counter = 0
         self.worker_thread = None
         self._loaded_model = None   # 当前已加载进显存的模型（翻译模式管理用）
+        self.mm = None              # 模型管理窗口状态（未打开时为 None）
         self.msg_queue = queue.Queue()
         self.stop_flag = threading.Event()
         self.tray_icon = None
@@ -1374,6 +1375,8 @@ class TranslateApp:
 
     def mm_refresh(self):
         """刷新模型管理窗口的状态和按钮"""
+        if not self.mm:
+            return
         installed = self.get_installed_models()
         for name, row in self.mm["rows"].items():
             is_installed = name in installed
@@ -1495,7 +1498,8 @@ class TranslateApp:
             else:
                 self.log(f"第三方 API 已配置: {T.API_MODEL}")
             self.refresh_model_list()
-            self.mm_refresh()
+            if self.mm:
+                self.mm_refresh()
             win.destroy()
 
         btn_row = tk.Frame(win, bg=COL_BG)
@@ -1503,11 +1507,6 @@ class TranslateApp:
         tk.Button(btn_row, text="保存", bg=COL_ACCENT, fg="white", relief=tk.FLAT,
                   padx=24, pady=5, font=("Microsoft YaHei UI", 10),
                   command=save).pack(side=tk.LEFT, padx=6)
-        # 赞助（窗口底部小链接，跳转赞助页）
-        tk.Button(win, text=tr("☕ 请开发者吃碗淮南牛肉汤", "☕ Buy the dev a bowl of beef soup"),
-                  bg=COL_BG, fg=COL_GOLD, relief=tk.FLAT, cursor="hand2", bd=0,
-                  font=("Microsoft YaHei UI", 8),
-                  command=self._open_sponsor).pack(pady=(0, 12))
         tk.Button(btn_row, text=tr("取消", "Cancel"), bg=COL_BTN, fg=COL_TEXT, relief=tk.FLAT,
                   padx=24, pady=5, font=("Microsoft YaHei UI", 10),
                   command=win.destroy).pack(side=tk.LEFT, padx=6)
@@ -1666,11 +1665,6 @@ class TranslateApp:
         tk.Button(btn_row, text="保存", bg=COL_ACCENT, fg="white", relief=tk.FLAT,
                   padx=24, pady=5, font=("Microsoft YaHei UI", 10),
                   command=save).pack(side=tk.LEFT, padx=6)
-        # 赞助（窗口底部小链接，跳转赞助页）
-        tk.Button(win, text=tr("☕ 请开发者吃碗淮南牛肉汤", "☕ Buy the dev a bowl of beef soup"),
-                  bg=COL_BG, fg=COL_GOLD, relief=tk.FLAT, cursor="hand2", bd=0,
-                  font=("Microsoft YaHei UI", 8),
-                  command=self._open_sponsor).pack(pady=(0, 12))
         tk.Button(btn_row, text="恢复默认", bg=COL_BTN, fg=COL_TEXT, relief=tk.FLAT,
                   padx=16, pady=5, font=("Microsoft YaHei UI", 10),
                   command=lambda: (prompt_text.delete("1.0", tk.END),
@@ -1751,14 +1745,19 @@ class TranslateApp:
         tk.Button(btn_row, text=tr("保存", "Save"), bg=COL_ACCENT, fg="white",
                   relief=tk.FLAT, padx=24, pady=5, font=("Microsoft YaHei UI", 10),
                   command=save).pack(side=tk.LEFT, padx=6)
+        tk.Button(btn_row, text=tr("取消", "Cancel"), bg=COL_BTN, fg=COL_TEXT,
+                  relief=tk.FLAT, padx=24, pady=5, font=("Microsoft YaHei UI", 10),
+                  command=win.destroy).pack(side=tk.LEFT, padx=6)
+        # 第三方 API 配置入口（也可在模型管理里配置，这里方便随时修改）
+        tk.Button(win, text=tr("⚙ 第三方 API 配置...", "⚙ 3rd-Party API Config..."),
+                  bg=COL_BTN, fg=COL_TEXT, relief=tk.FLAT, padx=12, pady=3,
+                  font=("Microsoft YaHei UI", 9),
+                  command=self.open_api_config).pack(pady=(2, 0))
         # 赞助（窗口底部小链接，跳转赞助页）
         tk.Button(win, text=tr("☕ 请开发者吃碗淮南牛肉汤", "☕ Buy the dev a bowl of beef soup"),
                   bg=COL_BG, fg=COL_GOLD, relief=tk.FLAT, cursor="hand2", bd=0,
                   font=("Microsoft YaHei UI", 8),
                   command=self._open_sponsor).pack(pady=(0, 12))
-        tk.Button(btn_row, text=tr("取消", "Cancel"), bg=COL_BTN, fg=COL_TEXT,
-                  relief=tk.FLAT, padx=24, pady=5, font=("Microsoft YaHei UI", 10),
-                  command=win.destroy).pack(side=tk.LEFT, padx=6)
 
 
     def open_model_import(self):
@@ -1902,19 +1901,10 @@ class TranslateApp:
                 ok = T.check_ollama()
             except Exception:
                 ok = False
-
-            def _upd():
-                try:
-                    # 模式切换重建界面时 label 可能短暂不存在，静默跳过
-                    if (hasattr(self, "status_label")
-                            and self.status_label.winfo_exists()):
-                        self.status_label.config(
-                            text="● Ollama 运行中" if ok else "● Ollama 未运行",
-                            fg=COL_GREEN if ok else COL_RED)
-                except Exception:
-                    pass
             try:
-                self.root.after(0, _upd)
+                self.root.after(0, lambda: self.status_label.config(
+                    text="● Ollama 运行中" if ok else "● Ollama 未运行",
+                    fg=COL_GREEN if ok else COL_RED))
             except Exception:
                 pass
 
