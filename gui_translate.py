@@ -645,9 +645,6 @@ class TranslateApp:
         self.parallel_entry.pack(side=tk.LEFT, pady=(36, 36))
         self.parallel_entry.bind("<Return>", self.on_parallel_change)
         self.parallel_entry.bind("<FocusOut>", self.on_parallel_change)
-        exclaim = tk.Label(ctrl, text="!", bg=COL_BG, fg=COL_GOLD, cursor="hand2",
-                           font=("Microsoft YaHei UI", 11, "bold"))
-        exclaim.pack(side=tk.LEFT, padx=(3, 0), pady=(36, 36))
         _par_tip = tr(
             "同时翻译的文件数量（1~16）。\n\n"
             "用途：\n· 1 = 逐个翻译（默认，最稳）\n· 2+ = 并行翻译，更快\n\n"
@@ -662,7 +659,6 @@ class TranslateApp:
             "· 3rd-party API: rate-limited (429), try 2~4\n"
             "· Press Enter or click away to apply")
         Tooltip(self.parallel_entry, _par_tip)
-        Tooltip(exclaim, _par_tip)
         self.task_count_label = tk.Label(ctrl, text="任务数: 0", bg=COL_BG,
                                          fg=COL_SUB, font=("Microsoft YaHei UI", 9))
         self.task_count_label.pack(side=tk.RIGHT, pady=(36, 36))
@@ -863,9 +859,6 @@ class TranslateApp:
         self.parallel_entry.pack(side=tk.LEFT, padx=6)
         self.parallel_entry.bind("<Return>", self.on_parallel_change)
         self.parallel_entry.bind("<FocusOut>", self.on_parallel_change)
-        exclaim = tk.Label(tend_row, text="!", bg=COL_BG, fg=COL_GOLD, cursor="hand2",
-                           font=("Microsoft YaHei UI", 11, "bold"))
-        exclaim.pack(side=tk.LEFT)
         _par_tip = tr(
             "同时翻译的文件数量（1~16）。\n\n"
             "用途：\n· 1 = 逐个翻译（默认，最稳）\n· 2+ = 并行翻译，更快\n\n"
@@ -880,7 +873,6 @@ class TranslateApp:
             "· 3rd-party API: rate-limited (429), try 2~4\n"
             "· Press Enter or click away to apply")
         Tooltip(self.parallel_entry, _par_tip)
-        Tooltip(exclaim, _par_tip)
 
         # 模型磁贴（固定正方形，Windows 磁贴风格：尺寸恒定、随窗口自动换行居中，
         # 后续新增模型只需加进 MODELS_INFO 即可自动排列）
