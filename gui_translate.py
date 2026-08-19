@@ -636,6 +636,18 @@ class TranslateApp:
         Tooltip(self.mode_combo, tr("\n".join(
             f"{k}：{v}" for k, v in TRANSLATE_MODES.items()),
             "\n".join(f"{k}: {v}" for k, v in TRANSLATE_MODES.items())))
+        # 并行翻译数量（同时翻译几个文件；本地多开占显存，默认 1）
+        tk.Label(ctrl, text=tr("并行:", "Parallel:"), bg=COL_BG, fg=COL_SUB,
+                 font=("Microsoft YaHei UI", 9)).pack(side=tk.LEFT, padx=(14, 4), pady=(36, 36))
+        pval = str(self.load_settings().get("parallel_count", 1))
+        self.parallel_combo = ttk.Combobox(ctrl, values=["1", "2", "3", "4"],
+                                           state="readonly", width=3)
+        self.parallel_combo.set(pval if pval in ("1", "2", "3", "4") else "1")
+        self.parallel_combo.pack(side=tk.LEFT, pady=(36, 36))
+        self.parallel_combo.bind("<<ComboboxSelected>>", self.on_parallel_change)
+        Tooltip(self.parallel_combo, tr(
+            "同时翻译的文件数量：\n· 1 = 逐个翻译（默认，省显存）\n· 2~4 = 并行翻译（更快，但多份内容同时占显存）",
+            "Files translated at once:\n· 1 = one by one (default, low VRAM)\n· 2~4 = parallel (faster, more VRAM)"))
         self.task_count_label = tk.Label(ctrl, text="任务数: 0", bg=COL_BG,
                                          fg=COL_SUB, font=("Microsoft YaHei UI", 9))
         self.task_count_label.pack(side=tk.RIGHT, pady=(36, 36))
@@ -827,6 +839,18 @@ class TranslateApp:
         Tooltip(self.mode_combo, tr("\n".join(
             f"{k}：{v}" for k, v in TRANSLATE_MODES.items()),
             "\n".join(f"{k}: {v}" for k, v in TRANSLATE_MODES.items())))
+        # 并行翻译数量（同时翻译几个文件；本地多开占显存，默认 1）
+        tk.Label(tend_row, text=tr("并行:", "Parallel:"), bg=COL_BG, fg=COL_SUB,
+                 font=("Microsoft YaHei UI", 10)).pack(side=tk.LEFT, padx=(16, 0))
+        pval = str(self.load_settings().get("parallel_count", 1))
+        self.parallel_combo = ttk.Combobox(tend_row, values=["1", "2", "3", "4"],
+                                           state="readonly", width=3)
+        self.parallel_combo.set(pval if pval in ("1", "2", "3", "4") else "1")
+        self.parallel_combo.pack(side=tk.LEFT, padx=6)
+        self.parallel_combo.bind("<<ComboboxSelected>>", self.on_parallel_change)
+        Tooltip(self.parallel_combo, tr(
+            "同时翻译的文件数量：\n· 1 = 逐个翻译（默认，省显存）\n· 2~4 = 并行翻译（更快，但多份内容同时占显存）",
+            "Files translated at once:\n· 1 = one by one (default, low VRAM)\n· 2~4 = parallel (faster, more VRAM)"))
 
         # 模型磁贴（固定正方形，Windows 磁贴风格：尺寸恒定、随窗口自动换行居中，
         # 后续新增模型只需加进 MODELS_INFO 即可自动排列）
@@ -2010,6 +2034,14 @@ class TranslateApp:
         self.worker_thread.start()
         self.log("▶ 开始翻译")
 
+    def on_parallel_change(self, event=None):
+        """并行翻译数量切换：保存设置（下次开始翻译生效）"""
+        val = self.parallel_combo.get()
+        s = self.load_settings()
+        s["parallel_count"] = int(val)
+        self.save_settings(s)
+        self.log(f"并行翻译数量: {val}")
+
     def translate_mode_var(self):
         """获取当前翻译模式（下拉可能尚未构建，回退设置值）"""
         try:
@@ -2027,13 +2059,26 @@ class TranslateApp:
         self.log("⏹ 已请求停止（当前批次完成后停止）")
 
     def _worker(self):
-        for task in self.tasks:
-            if task["status"] != "排队中":
-                continue
-            if self.stop_flag.is_set():
-                self.log("已停止")
-                break
-            self._run_task(task)
+        pending = [t for t in self.tasks if t["status"] == "排队中"]
+        parallel = int(self.load_settings().get("parallel_count", 1) or 1)
+        parallel = max(1, min(parallel, 4))
+        if parallel <= 1:
+            for task in pending:
+                if self.stop_flag.is_set():
+                    break
+                self._run_task(task)
+        else:
+            from concurrent.futures import ThreadPoolExecutor
+
+            def run_one(task):
+                if not self.stop_flag.is_set():
+                    self._run_task(task)
+
+            with ThreadPoolExecutor(max_workers=parallel,
+                                    thread_name_prefix="translate") as ex:
+                futures = [ex.submit(run_one, t) for t in pending]
+                for f in futures:
+                    f.result()  # 等待全部结束（停止后未启动的秒回）
         # 短线模式：全部任务结束（或停止）后卸载模型，释放显存
         if (self.translate_mode_var().get() == "短线翻译"
                 and T.ENGINE != "api"
