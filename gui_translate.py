@@ -977,7 +977,7 @@ class TranslateApp:
         self.log(f"翻译倾向已切换: {val}")
 
     def _ez_refresh_cards(self):
-        """刷新 EZ 模式模型卡片状态"""
+        """刷新 EZ 模式模型卡片状态（远程翻译时 >4b 卡片灰置）"""
         if not hasattr(self, "ez_cards"):
             return
         installed = self.get_installed_models()
